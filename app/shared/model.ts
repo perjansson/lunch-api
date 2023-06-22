@@ -10,7 +10,7 @@ export const LocationSchema = z.enum([
   'stockholm',
   'lisbon',
   'seinajoki',
-  'api-test-data',
+  'api-test-data-location', // Used only for testing
 ])
 
 export type Location = z.infer<typeof LocationSchema>
