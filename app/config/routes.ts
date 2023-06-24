@@ -1,7 +1,7 @@
 import { Application } from 'express'
 import { z } from 'zod'
 import { Location, LocationSchema } from '../shared/model'
-import { getConfig } from './api'
+import { getConfig } from './controller'
 import { assertParams } from '../shared/assertParams'
 
 export function initConfigRoutes(app: Application) {
@@ -11,6 +11,10 @@ export function initConfigRoutes(app: Application) {
     async (req, res) => {
       const { location } = req.params as { location: Location }
       const config = await getConfig(location)
+
+      if (!config) {
+        res.status(404).send()
+      }
 
       res.send(JSON.stringify(config))
     }

@@ -1,4 +1,4 @@
-import { Application, Express } from 'express'
+import { Application } from 'express'
 import { initRestaurantRoutes } from './restaurant/routes'
 import { initConfigRoutes } from './config/routes'
 

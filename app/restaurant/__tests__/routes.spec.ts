@@ -29,8 +29,35 @@ describe('Route /location/restaurants', () => {
     ])
   })
 
-  test('should return 404 for invalid location', async () => {
+  test('should return correct restaurant details for specific restaurant', async () => {
+    const response = await request(app).get(
+      '/api-test-data-location/restaurants/1'
+    )
+    expect(response.status).toBe(200)
+
+    const parsedResponse = JSON.parse(response.text)
+    expect(parsedResponse).toEqual({
+      id: '1',
+      name: 'Restaurant 1',
+      exclude: false,
+      distance: '1 km',
+      time: '15 min',
+    })
+  })
+
+  test('should return a random restaurant', async () => {
+    const response = await request(app).get(
+      '/api-test-data-location/restaurant'
+    )
+    expect(response.status).toBe(200)
+
+    const parsedResponse = JSON.parse(response.text)
+    expect(parsedResponse).toHaveProperty('id')
+    expect(parsedResponse).toHaveProperty('name')
+  })
+
+  test('should return 400 for invalid location', async () => {
     const response = await request(app).get('/invalid-location/restaurants')
-    expect(response.status).toBe(404)
+    expect(response.status).toBe(400)
   })
 })

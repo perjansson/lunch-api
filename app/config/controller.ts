@@ -9,10 +9,15 @@ const DEFAULT_CONFIG = {
     DEFAULT_DAYS_BETWEEN_RESTAURANT_CAN_APPEAR_IN_RANDOMISATION,
 }
 
-export async function getConfig(location: Location): Promise<Config> {
-  const { data } = await getSpreadSheetValues(`${location}!I2`)
+export async function getConfig(
+  location: Location
+): Promise<Config | undefined> {
+  const values = await getSpreadSheetValues(`${location}!I2`)
+  if (!values) {
+    return undefined
+  }
 
-  const configRaw = validateConfig(data)
+  const configRaw = validateConfig(values)
   if (configRaw === undefined) {
     return DEFAULT_CONFIG
   }

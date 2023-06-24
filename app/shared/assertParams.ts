@@ -11,7 +11,7 @@ export function assertParams<T extends ZodTypeAny>(
       req.params = result.data
       next()
     } else {
-      res.status(404).json({ error: result.error.message })
+      res.status(400).json({ error: result.error.message })
     }
   }
 }

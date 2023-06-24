@@ -12,8 +12,8 @@ describe('Route /location/config', () => {
     })
   })
 
-  test('should return 404 for invalid location', async () => {
+  test('should return 400 for invalid location', async () => {
     const response = await request(app).get('/invalid-location/config')
-    expect(response.status).toBe(404)
+    expect(response.status).toBe(400)
   })
 })
