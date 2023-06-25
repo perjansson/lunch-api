@@ -3,9 +3,9 @@ import { app } from '../../app'
 
 describe('Route /location/restaurants', () => {
   test('should return correct restaurants for location', async () => {
-    const response = await request(app).get(
-      '/api-test-data-location/restaurants'
-    )
+    const response = await request(app)
+      .get('/api/api-test-data-location/restaurants')
+      .set('api-key', 'test-api-key')
     expect(response.status).toBe(200)
 
     const parsedResponse = JSON.parse(response.text)
@@ -30,9 +30,9 @@ describe('Route /location/restaurants', () => {
   })
 
   test('should return correct restaurant details for specific restaurant', async () => {
-    const response = await request(app).get(
-      '/api-test-data-location/restaurants/1'
-    )
+    const response = await request(app)
+      .get('/api/api-test-data-location/restaurants/1')
+      .set('api-key', 'test-api-key')
     expect(response.status).toBe(200)
 
     const parsedResponse = JSON.parse(response.text)
@@ -46,9 +46,9 @@ describe('Route /location/restaurants', () => {
   })
 
   test('should return a random restaurant', async () => {
-    const response = await request(app).get(
-      '/api-test-data-location/restaurant'
-    )
+    const response = await request(app)
+      .get('/api/api-test-data-location/restaurant')
+      .set('api-key', 'test-api-key')
     expect(response.status).toBe(200)
 
     const parsedResponse = JSON.parse(response.text)
@@ -57,7 +57,14 @@ describe('Route /location/restaurants', () => {
   })
 
   test('should return 400 for invalid location', async () => {
-    const response = await request(app).get('/invalid-location/restaurants')
+    const response = await request(app)
+      .get('/api/invalid-location/restaurants')
+      .set('api-key', 'test-api-key')
     expect(response.status).toBe(400)
+  })
+
+  test('should return 401 for missing api-key', async () => {
+    const response = await request(app).get('/api/invalid-location/restaurants')
+    expect(response.status).toBe(401)
   })
 })

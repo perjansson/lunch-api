@@ -1,5 +1,6 @@
 import { NextFunction, Request, Response } from 'express'
-import { ZodTypeAny, z } from 'zod'
+import { ZodTypeAny } from 'zod'
+import { API_KEYS } from './environment'
 
 export function assertParams<T extends ZodTypeAny>(
   schema: T
@@ -14,4 +15,18 @@ export function assertParams<T extends ZodTypeAny>(
       res.status(400).json({ error: result.error.message })
     }
   }
+}
+
+export function validateAPIKey(
+  req: Request,
+  res: Response,
+  next: NextFunction
+) {
+  const apiKey = req.headers['api-key']
+
+  if (!apiKey || typeof apiKey !== 'string' || !API_KEYS.includes(apiKey)) {
+    return res.status(401).json({ error: 'Unauthorized' })
+  }
+
+  next()
 }

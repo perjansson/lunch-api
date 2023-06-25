@@ -2,11 +2,11 @@ import { Application } from 'express'
 import { z } from 'zod'
 import { Location, LocationSchema } from '../shared/model'
 import { getConfig } from './controller'
-import { assertParams } from '../shared/assertParams'
+import { assertParams } from '../shared/middlewares'
 
 export function initConfigRoutes(app: Application) {
   app.get(
-    '/:location/config',
+    '/api/:location/config',
     assertParams(z.object({ location: LocationSchema })),
     async (req, res) => {
       const { location } = req.params as { location: Location }

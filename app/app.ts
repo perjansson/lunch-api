@@ -1,10 +1,10 @@
+require('dotenv').config()
+
 import express, { Application } from 'express'
 import morgan from 'morgan'
 import path from 'path'
-import { config } from 'dotenv'
 import { initRoutes } from './routes'
-
-config()
+import { validateAPIKey } from './shared/middlewares'
 
 const environment = process.env.NODE_ENV || 'development'
 
@@ -14,6 +14,8 @@ app.use(morgan(environment === 'development' ? 'dev' : 'combined'))
 app.get('/', (req, res) => {
   res.sendFile(path.join(__dirname, '..', 'public', 'index.html'))
 })
+
+app.use('/api', validateAPIKey)
 
 app.use((req, res, next) => {
   res.setHeader('Content-Type', 'application/json')

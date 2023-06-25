@@ -7,7 +7,7 @@ import {
   getRestaurants,
 } from './controller'
 import { Location, LocationSchema } from '../shared/model'
-import { assertParams } from '../shared/assertParams'
+import { assertParams } from '../shared/middlewares'
 
 interface RestaurantsParams extends ParamsDictionary {
   location: Location
@@ -15,7 +15,7 @@ interface RestaurantsParams extends ParamsDictionary {
 
 export function initRestaurantRoutes(app: Application) {
   app.get(
-    '/:location/restaurants',
+    '/api/:location/restaurants',
     assertParams(z.object({ location: LocationSchema })),
     async (req: Request<RestaurantsParams>, res: Response) => {
       const { location } = req.params
@@ -39,7 +39,7 @@ export function initRestaurantRoutes(app: Application) {
   }
 
   app.get(
-    '/:location/restaurants/:id',
+    '/api/:location/restaurants/:id',
     assertParams(z.object({ location: LocationSchema, id: z.string() })),
     async (req: Request<RestaurantParams>, res: Response) => {
       const { location, id } = req.params
@@ -58,7 +58,7 @@ export function initRestaurantRoutes(app: Application) {
   }
 
   app.get(
-    '/:location/restaurant',
+    '/api/:location/restaurant',
     assertParams(z.object({ location: LocationSchema })),
     async (req: Request<RandomRestaurantParams>, res: Response) => {
       const { location } = req.params

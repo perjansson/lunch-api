@@ -5,7 +5,7 @@
   "scripts": {
     "start": "node ./dist/server.js",
     "dev": "ts-node-dev --respawn --transpile-only ./app/server.ts",
-    "test": "jest",
+    "test": "NODE_ENV=test jest",
     "build": "rimraf dist && NODE_ENV=production tsc",
     "deploy": "flyctl deploy"
   },
