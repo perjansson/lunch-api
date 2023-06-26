@@ -17,16 +17,17 @@ export function assertParams<T extends ZodTypeAny>(
   }
 }
 
-export function validateAPIKey(
-  req: Request,
-  res: Response,
-  next: NextFunction
-) {
-  const apiKey = req.headers['api-key']
+export function validateAPIKey(exlucedPaths: string[] = []) {
+  return (req: Request, res: Response, next: NextFunction) => {
+    if (exlucedPaths.includes(req.path)) {
+      return next()
+    }
 
-  if (!apiKey || typeof apiKey !== 'string' || !API_KEYS.includes(apiKey)) {
-    return res.status(401).json({ error: 'Unauthorized' })
+    const apiKey = req.headers['api-key']
+    if (!apiKey || typeof apiKey !== 'string' || !API_KEYS.includes(apiKey)) {
+      return res.status(401).json({ error: 'Unauthorized' })
+    }
+
+    next()
   }
-
-  next()
 }

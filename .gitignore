@@ -1,5 +1,5 @@
 # App specific
-service_account_credentials.json
+service_account_credentials.*
 
 # Logs
 logs

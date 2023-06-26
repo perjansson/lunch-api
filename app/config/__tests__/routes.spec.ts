@@ -1,7 +1,7 @@
 import request from 'supertest'
 import { app } from '../../app'
 
-describe('Route /location/config', () => {
+describe('Route /api/location/config', () => {
   test('should return correct config for location', async () => {
     const response = await request(app)
       .get('/api/api-test-data-location/config')

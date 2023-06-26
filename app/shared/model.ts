@@ -1,16 +1,6 @@
 import { z } from 'zod'
+import { LOCATIONS } from './constants'
 
-export const LocationSchema = z.enum([
-  'turku',
-  'newyork',
-  'tampere',
-  'helsinki',
-  'amsterdam',
-  'tokyo',
-  'stockholm',
-  'lisbon',
-  'seinajoki',
-  'api-test-data-location', // Used only for testing
-])
+export const LocationSchema = z.enum(LOCATIONS)
 
 export type Location = z.infer<typeof LocationSchema>

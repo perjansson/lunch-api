@@ -29,10 +29,11 @@ export function parseRestaurants(restaurantsRaw: (string | boolean)[][]) {
       const parsedRestaurant = RestaurantSchema.safeParse({
         id: row[0],
         name: row[1],
-        exclude: Boolean(row[2]),
-        distance: row[3],
-        time: row[4],
-        directions: row[5],
+        address: row[2],
+        exclude: Boolean(row[3]),
+        distance: row[4],
+        time: row[5],
+        directions: row[6],
       })
 
       if (parsedRestaurant.success) {

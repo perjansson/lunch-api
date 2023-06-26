@@ -1,12 +1,13 @@
 import { google, sheets_v4 } from 'googleapis'
-import { GaxiosResponse } from 'gaxios'
 import { SPREADSHEET_ID } from './constants'
+import { GOOGLE_APPLICATION_CREDENTIALS } from './environment'
 
 const sheets = google.sheets('v4')
 const SCOPES = ['https://www.googleapis.com/auth/spreadsheets.readonly']
 
 async function getAuthToken() {
   const auth = new google.auth.GoogleAuth({
+    credentials: GOOGLE_APPLICATION_CREDENTIALS,
     scopes: SCOPES,
   })
 
@@ -27,11 +28,9 @@ export async function getSpreadSheetValues(
       })
     ).data
   } catch (error) {
-    console.error(
-      `Error getting spreadsheet values at range ${sheetName}:`,
-      error instanceof Error ? error.message : error
-    )
+    const errorMessage = `Error getting spreadsheet values at range ${sheetName}:`
+    console.error(errorMessage, error instanceof Error ? error.message : error)
 
-    return undefined
+    throw Error(errorMessage)
   }
 }

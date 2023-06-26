@@ -13,62 +13,92 @@ interface RestaurantsParams extends ParamsDictionary {
   location: Location
 }
 
+interface RestaurantParams extends ParamsDictionary {
+  location: Location
+  restaurantId: string
+}
+
+interface RandomRestaurantParams extends ParamsDictionary {
+  location: Location
+}
+
 export function initRestaurantRoutes(app: Application) {
   app.get(
     '/api/:location/restaurants',
     assertParams(z.object({ location: LocationSchema })),
     async (req: Request<RestaurantsParams>, res: Response) => {
-      const { location } = req.params
+      try {
+        const { location } = req.params
 
-      const restaurants = await getRestaurants(location)
-      if (!restaurants) {
-        return res.status(404).send()
+        const restaurants = await getRestaurants(location)
+        if (!restaurants) {
+          return res.status(404).send()
+        }
+
+        const includedRestaurants = restaurants.filter(
+          (r) => r.exclude === null || !r.exclude
+        )
+
+        res.send(JSON.stringify(includedRestaurants))
+      } catch (error) {
+        res
+          .status(500)
+          .send(
+            error instanceof Error
+              ? error.message
+              : 'Unknown error getting restaurants'
+          )
       }
-
-      const includedRestaurants = restaurants.filter(
-        (r) => r.exclude === null || !r.exclude
-      )
-
-      res.send(JSON.stringify(includedRestaurants))
     }
   )
-
-  interface RestaurantParams extends ParamsDictionary {
-    location: Location
-    restaurantId: string
-  }
 
   app.get(
     '/api/:location/restaurants/:id',
     assertParams(z.object({ location: LocationSchema, id: z.string() })),
     async (req: Request<RestaurantParams>, res: Response) => {
-      const { location, id } = req.params
+      try {
+        const { location, id } = req.params
 
-      const restaurant = await getRestaurant(location, id)
-      if (!restaurant) {
-        return res.status(404).send()
+        const restaurant = await getRestaurant(location, id)
+        if (!restaurant) {
+          return res.status(404).send()
+        }
+
+        res.send(JSON.stringify(restaurant))
+      } catch (error) {
+        res
+          .status(500)
+          .send(
+            error instanceof Error
+              ? error.message
+              : `Unknown error getting restaurnt with id ${req.params.id}`
+          )
       }
-
-      res.send(JSON.stringify(restaurant))
     }
   )
-
-  interface RandomRestaurantParams extends ParamsDictionary {
-    location: Location
-  }
 
   app.get(
     '/api/:location/restaurant',
     assertParams(z.object({ location: LocationSchema })),
     async (req: Request<RandomRestaurantParams>, res: Response) => {
-      const { location } = req.params
+      try {
+        const { location } = req.params
 
-      const randomRestaurant = await getRandomRestaurant(location)
-      if (!randomRestaurant) {
-        return res.status(404).send()
+        const randomRestaurant = await getRandomRestaurant(location)
+        if (!randomRestaurant) {
+          return res.status(404).send()
+        }
+
+        res.send(JSON.stringify(randomRestaurant))
+      } catch (error) {
+        res
+          .status(500)
+          .send(
+            error instanceof Error
+              ? error.message
+              : 'Unknown error getting random restaurant'
+          )
       }
-
-      res.send(JSON.stringify(randomRestaurant))
     }
   )
 }

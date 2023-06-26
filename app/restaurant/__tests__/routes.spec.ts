@@ -1,7 +1,7 @@
 import request from 'supertest'
 import { app } from '../../app'
 
-describe('Route /location/restaurants', () => {
+describe('Route /api/location/restaurants', () => {
   test('should return correct restaurants for location', async () => {
     const response = await request(app)
       .get('/api/api-test-data-location/restaurants')
@@ -13,6 +13,7 @@ describe('Route /location/restaurants', () => {
       {
         id: '1',
         name: 'Restaurant 1',
+        address: 'Foobar street 1',
         exclude: false,
         distance: '1 km',
         time: '15 min',
@@ -20,12 +21,24 @@ describe('Route /location/restaurants', () => {
       {
         id: '3',
         name: 'Restaurant 3',
+        address: 'Foobar street 3',
         exclude: false,
         distance: '',
         time: '22 min',
       },
-      { id: '4', name: 'Restaurant 4', exclude: false, distance: '1,0 km' },
-      { id: '6', name: 'Restaurant 6', exclude: false },
+      {
+        id: '4',
+        name: 'Restaurant 4',
+        address: '',
+        exclude: false,
+        distance: '1,0 km',
+      },
+      {
+        id: '6',
+        name: 'Restaurant 6',
+        address: 'Foobar street 6',
+        exclude: false,
+      },
     ])
   })
 
@@ -39,6 +52,7 @@ describe('Route /location/restaurants', () => {
     expect(parsedResponse).toEqual({
       id: '1',
       name: 'Restaurant 1',
+      address: 'Foobar street 1',
       exclude: false,
       distance: '1 km',
       time: '15 min',
