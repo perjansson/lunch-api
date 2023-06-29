@@ -17,9 +17,21 @@ export function assertParams<T extends ZodTypeAny>(
   }
 }
 
-export function validateAPIKey(exlucedPaths: string[] = []) {
+interface ValidateAPIOptions {
+  exlucedPaths?: string[]
+  exlucedOrigins?: string[]
+}
+
+export function validateAPI({
+  exlucedPaths,
+  exlucedOrigins,
+}: ValidateAPIOptions) {
   return (req: Request, res: Response, next: NextFunction) => {
-    if (exlucedPaths.includes(req.path)) {
+    if ((exlucedPaths ?? []).includes(req.path)) {
+      return next()
+    }
+
+    if ((exlucedOrigins ?? []).includes(req.headers.origin ?? '')) {
       return next()
     }
 

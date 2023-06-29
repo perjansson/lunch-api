@@ -6,12 +6,12 @@ import { parseRestaurants, validateRestaurants } from './validator'
 export async function getRestaurants(
   location: Location
 ): Promise<Restaurant[] | undefined> {
-  const values = await getSpreadSheetValues(`${location}!A2:F`)
-  if (!values) {
+  const data = await getSpreadSheetValues(`${location}!A2:F`)
+  if (!data || !data.values) {
     return undefined
   }
 
-  const restaurantsRaw = validateRestaurants(values)
+  const restaurantsRaw = validateRestaurants(data)
   if (restaurantsRaw === undefined) {
     return []
   }

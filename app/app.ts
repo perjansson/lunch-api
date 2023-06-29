@@ -4,23 +4,32 @@ import express, { Application } from 'express'
 import morgan from 'morgan'
 import path from 'path'
 import bodyParser from 'body-parser'
+import cors from 'cors'
 import { initRoutes } from './routes'
-import { validateAPIKey } from './shared/middlewares'
-import { LOCATIONS } from './shared/constants'
+import { validateAPI } from './shared/middlewares'
+import { LOCATIONS, ALLOWED_ORIGINS } from './shared/constants'
 
 const environment = process.env.NODE_ENV || 'development'
 
 export const app: Application = express()
+app.use(
+  cors({
+    origin: ALLOWED_ORIGINS,
+  })
+)
 app.use(morgan(environment === 'development' ? 'dev' : 'combined'))
 app.use(bodyParser.urlencoded({ extended: true }))
 
-app.get('/', (req, res) => {
+app.get('/', (_req, res) => {
   res.sendFile(path.join(__dirname, '..', 'public', 'index.html'))
 })
 
 app.use(
   '/api',
-  validateAPIKey(LOCATIONS.map((location) => `/${location}/slack`))
+  validateAPI({
+    exlucedPaths: LOCATIONS.map((location) => `/${location}/slack`),
+    exlucedOrigins: ALLOWED_ORIGINS,
+  })
 )
 
 app.use((req, res, next) => {

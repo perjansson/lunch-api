@@ -1,4 +1,4 @@
-# Lunch API
+# Lunch Api
 
 This is the README file for the Lunch API app.
 
