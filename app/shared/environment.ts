@@ -9,3 +9,5 @@ export const GOOGLE_APPLICATION_CREDENTIALS = JSON.parse(
     'base64'
   ).toString()
 )
+
+export const REDIS_CONNECTING_STRING = process.env.REDIS_CONNECTING_STRING
