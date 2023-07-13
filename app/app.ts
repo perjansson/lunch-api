@@ -7,7 +7,7 @@ import bodyParser from 'body-parser'
 import cors from 'cors'
 import { initRoutes } from './routes'
 import { validateAPI } from './shared/middlewares'
-import { LOCATIONS, ALLOWED_ORIGINS } from './shared/constants'
+import { ALLOWED_ORIGINS } from './shared/constants'
 
 const environment = process.env.NODE_ENV || 'development'
 
@@ -27,7 +27,7 @@ app.get('/', (_req, res) => {
 app.use(
   '/api',
   validateAPI({
-    exlucedPaths: LOCATIONS.map((location) => `/${location}/slack`),
+    exlucedPaths: ['/slack'],
     exlucedOrigins: ALLOWED_ORIGINS,
   })
 )

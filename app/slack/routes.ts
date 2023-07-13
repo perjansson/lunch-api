@@ -1,57 +1,98 @@
 import { Application, Request, Response } from 'express'
-import { ParamsDictionary } from 'express-serve-static-core'
-import { assertParams } from '../shared/middlewares'
-import { z } from 'zod'
-import { Location, LocationSchema } from '../shared/model'
+import NodeGeocoder, { Entry } from 'node-geocoder'
+import geoTz from 'geo-tz'
+import { format } from 'date-fns'
+import { utcToZonedTime } from 'date-fns-tz'
+import { LocationSchema } from '../shared/model'
 import { getRandomRestaurant } from '../restaurant/controller'
 import { Restaurant } from '../restaurant/model'
+import { CacheService } from '../shared/cache'
+import { REDIS_CONNECTING_STRING } from '../shared/environment'
+import { OFFICES } from '../shared/constants'
 
-interface SlackRestaurantParams extends ParamsDictionary {
-  location: Location
-}
+const cacheService = REDIS_CONNECTING_STRING
+  ? CacheService.getInstance(REDIS_CONNECTING_STRING)
+  : null
 
 export function initSlackRoutes(app: Application) {
-  app.post(
-    '/api/:location/slack',
-    assertParams(z.object({ location: LocationSchema })),
-    async (req: Request<SlackRestaurantParams>, res: Response) => {
-      try {
-        const { location } = req.params
-        const { team_domain } = req.body
+  app.post('/api/slack', async (req: Request, res: Response) => {
+    try {
+      console.info(`Slack request`, JSON.stringify(req.body))
 
-        console.info('req.body', req.body)
-
-        if (team_domain !== 'reaktor') {
-          return res.status(401).send()
-        }
-
-        const randomRestaurant = await getRandomRestaurant(location)
-
-        const message = randomRestaurant
-          ? buildMessage(randomRestaurant)
-          : "Sorry, I couldn't find any restaurants for today. :sad-toast:"
-
-        const slackResponse = {
-          response_type: 'in_channel',
-          text: message,
-        }
-
-        res.send(JSON.stringify(slackResponse))
-      } catch (error) {
-        const errorMessage =
-          error instanceof Error
-            ? error.message
-            : 'Unknown error getting restaurant for Slack request'
-
-        const slackResponse = {
-          response_type: 'in_channel',
-          text: `Oh snap: ${errorMessage}`,
-        }
-
-        res.send(JSON.stringify(slackResponse))
+      const { team_domain } = req.body
+      if (team_domain !== 'reaktor') {
+        return res.status(401).send()
       }
+
+      const location = req.body.text.trim()
+      const parsedLocation = LocationSchema.safeParse(location)
+      console.info(`Parsed location for ${location}:`, parsedLocation)
+      if (!parsedLocation.success) {
+        return res.send(
+          `Please provide a valid location, i.e. '/lunch ${OFFICES.join(
+            ' | '
+          )}'`
+        )
+      }
+
+      const coordinates = await getLocationCoordinates(location)
+      console.info(`Coordinates for ${location}:`, coordinates)
+      if (!coordinates) {
+        return res.send(
+          `Sorry, I couldn't find any coordinates for the location ${location} :sad-toast:`
+        )
+      }
+
+      const isoDate = getCurrentISODate(coordinates)
+      console.info(`ISO date for ${location}:`, isoDate)
+      if (!isoDate) {
+        return res.send(
+          `Sorry, I couldn't find any current date for the location ${location} and coordinates ${JSON.stringify(
+            coordinates
+          )} :sad-toast:`
+        )
+      }
+
+      const cacheKey = `${isoDate}-${location}`
+      console.info(`Cache key for ${location}:`, cacheKey)
+
+      const cachedRestaurant = await cacheService?.get(cacheKey)
+      console.info(`Cached restaurant for ${location}:`, cachedRestaurant)
+
+      const randomRestaurant = cachedRestaurant
+        ? (JSON.parse(cachedRestaurant) as Restaurant) // TODO: Validate data?
+        : await getRandomRestaurant(location)
+      console.info(`Random restaurant for ${location}:`, randomRestaurant)
+
+      const message = randomRestaurant
+        ? buildMessage(randomRestaurant)
+        : "Sorry, I couldn't find any restaurants for today. :sad-toast:"
+      console.info(`Message for ${location}:`, message)
+
+      const slackResponse = {
+        response_type: 'in_channel',
+        text: message,
+      }
+
+      if (isoDate && !cachedRestaurant) {
+        await cacheService?.set(cacheKey, JSON.stringify(randomRestaurant))
+      }
+
+      res.send(JSON.stringify(slackResponse))
+    } catch (error) {
+      const errorMessage =
+        error instanceof Error
+          ? error.message
+          : 'Unknown error getting restaurant for Slack request'
+
+      const slackResponse = {
+        response_type: 'in_channel',
+        text: `Oh snap: ${errorMessage}`,
+      }
+
+      res.send(JSON.stringify(slackResponse))
     }
-  )
+  })
 }
 
 function buildMessage(restaurant: Restaurant) {
@@ -72,4 +113,40 @@ function buildMessage(restaurant: Restaurant) {
   message += '. Bon appetit! :chefs-kiss:'
 
   return message
+}
+
+interface Coordinates {
+  latitude: number
+  longitude: number
+}
+
+const geocoder = NodeGeocoder({
+  provider: 'openstreetmap',
+})
+
+function getLocationCoordinates(location: string): Promise<Coordinates> {
+  return new Promise<Coordinates>((resolve, reject) => {
+    geocoder.geocode(location, (err: any, data: Entry[]) => {
+      if (err || data.length === 0) {
+        reject(err || new Error('No results found for the location'))
+      } else {
+        const { latitude, longitude } = data[0]
+
+        if (!latitude || !longitude) {
+          reject(new Error('No coordinates found for the location'))
+        } else {
+          resolve({ latitude, longitude })
+        }
+      }
+    })
+  })
+}
+
+function getCurrentISODate(coordinates: Coordinates): string {
+  const currentDate = new Date()
+  const { latitude, longitude } = coordinates
+  const timeZone = geoTz.find(latitude, longitude)[0]
+  const zonedDate = utcToZonedTime(currentDate, timeZone)
+  const formattedDate = format(zonedDate, 'yyyy-MM-dd')
+  return formattedDate
 }

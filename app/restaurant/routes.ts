@@ -12,7 +12,7 @@ import { CacheService } from '../shared/cache'
 import { REDIS_CONNECTING_STRING } from '../shared/environment'
 
 const cacheService = REDIS_CONNECTING_STRING
-  ? new CacheService(REDIS_CONNECTING_STRING)
+  ? CacheService.getInstance(REDIS_CONNECTING_STRING)
   : null
 
 interface RestaurantsParams extends ParamsDictionary {
@@ -90,7 +90,7 @@ export function initRestaurantRoutes(app: Application) {
       try {
         const { location } = req.params
         const { isoDate } = req.query
-        const cacheKey = `${location}-${isoDate}`
+        const cacheKey = `${isoDate}-${location}`
 
         if (isoDate) {
           const cachedRestaurant = await cacheService?.get(cacheKey)

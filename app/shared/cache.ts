@@ -1,10 +1,18 @@
 import Redis from 'ioredis'
 
 export class CacheService {
+  private static instance: CacheService
   private redisClient: Redis
 
-  constructor(connectionString: string) {
+  private constructor(connectionString: string) {
     this.redisClient = new Redis(connectionString)
+  }
+
+  public static getInstance(connectionString: string): CacheService {
+    if (!CacheService.instance) {
+      CacheService.instance = new CacheService(connectionString)
+    }
+    return CacheService.instance
   }
 
   public async set(key: string, value: string): Promise<void> {
