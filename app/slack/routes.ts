@@ -6,13 +6,10 @@ import { utcToZonedTime } from 'date-fns-tz'
 import { LocationSchema } from '../shared/model'
 import { getRandomRestaurant } from '../restaurant/controller'
 import { Restaurant } from '../restaurant/model'
-import { CacheService } from '../shared/cache'
-import { REDIS_CONNECTING_STRING } from '../shared/environment'
 import { OFFICES } from '../shared/constants'
+import { DatabaseService } from '../shared/db'
 
-const cacheService = REDIS_CONNECTING_STRING
-  ? CacheService.getInstance(REDIS_CONNECTING_STRING)
-  : null
+const db = DatabaseService.getInstance()
 
 export function initSlackRoutes(app: Application) {
   app.post('/api/slack', async (req: Request, res: Response) => {
@@ -53,29 +50,25 @@ export function initSlackRoutes(app: Application) {
         )
       }
 
-      const cacheKey = `${isoDate}-${location}`
-      console.info(`Cache key for ${location}:`, cacheKey)
+      let restaurant = await db.getRecommendation(isoDate, location)
 
-      const cachedRestaurant = await cacheService?.get(cacheKey)
-      console.info(`Cached restaurant for ${location}:`, cachedRestaurant)
+      if (!restaurant) {
+        restaurant = await getRandomRestaurant(location)
+        console.info(`Random restaurant for ${location}:`, restaurant)
 
-      const randomRestaurant = cachedRestaurant
-        ? (JSON.parse(cachedRestaurant) as Restaurant) // TODO: Validate data?
-        : await getRandomRestaurant(location)
-      console.info(`Random restaurant for ${location}:`, randomRestaurant)
+        if (restaurant) {
+          db.saveRecommendation(isoDate, location, restaurant)
+        }
+      }
 
-      const message = randomRestaurant
-        ? buildMessage(randomRestaurant)
+      const message = restaurant
+        ? buildMessage(restaurant)
         : "Sorry, I couldn't find any restaurants for today. :sad-toast:"
       console.info(`Message for ${location}:`, message)
 
       const slackResponse = {
         response_type: 'in_channel',
         text: message,
-      }
-
-      if (isoDate && !cachedRestaurant) {
-        await cacheService?.set(cacheKey, JSON.stringify(randomRestaurant))
       }
 
       res.send(JSON.stringify(slackResponse))

@@ -33,10 +33,10 @@ export async function getRestaurant(
 
 export async function getRandomRestaurant(
   location: Location
-): Promise<Restaurant | undefined> {
+): Promise<Restaurant | null> {
   const restaurants = await getRestaurants(location)
   if (!restaurants || restaurants.length === 0) {
-    return undefined
+    return null
   }
 
   const includedRestaurants = restaurants.filter(

@@ -8,12 +8,9 @@ import {
 } from './controller'
 import { Location, LocationSchema } from '../shared/model'
 import { assertParams } from '../shared/middlewares'
-import { CacheService } from '../shared/cache'
-import { REDIS_CONNECTING_STRING } from '../shared/environment'
+import { DatabaseService } from '../shared/db'
 
-const cacheService = REDIS_CONNECTING_STRING
-  ? CacheService.getInstance(REDIS_CONNECTING_STRING)
-  : null
+const db = DatabaseService.getInstance()
 
 interface RestaurantsParams extends ParamsDictionary {
   location: Location
@@ -90,13 +87,15 @@ export function initRestaurantRoutes(app: Application) {
       try {
         const { location } = req.params
         const { isoDate } = req.query
-        const cacheKey = `${isoDate}-${location}`
 
         if (isoDate) {
-          const cachedRestaurant = await cacheService?.get(cacheKey)
+          const restaurant = await db.getRecommendation(
+            isoDate as string,
+            location
+          )
 
-          if (cachedRestaurant) {
-            return res.send(cachedRestaurant)
+          if (restaurant) {
+            return res.send(restaurant)
           }
         }
 
@@ -104,7 +103,11 @@ export function initRestaurantRoutes(app: Application) {
         if (!randomRestaurant) {
           return res.status(404).send()
         } else if (isoDate) {
-          await cacheService?.set(cacheKey, JSON.stringify(randomRestaurant))
+          await db.saveRecommendation(
+            isoDate as string,
+            location,
+            randomRestaurant
+          )
         }
 
         res.send(JSON.stringify(randomRestaurant))

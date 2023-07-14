@@ -1,4 +1,6 @@
 import Redis from 'ioredis'
+import { REDIS_CONNECTING_STRING } from './environment'
+import { Restaurant } from '../restaurant/model'
 
 export class CacheService {
   private static instance: CacheService
@@ -8,25 +10,33 @@ export class CacheService {
     this.redisClient = new Redis(connectionString)
   }
 
-  public static getInstance(connectionString: string): CacheService {
-    if (!CacheService.instance) {
-      CacheService.instance = new CacheService(connectionString)
+  public static getInstance(): CacheService {
+    if (!CacheService.instance && REDIS_CONNECTING_STRING) {
+      CacheService.instance = new CacheService(REDIS_CONNECTING_STRING)
     }
     return CacheService.instance
   }
 
-  public async set(key: string, value: string): Promise<void> {
-    await this.redisClient.set(key, value)
+  public async set(
+    date: string,
+    location: string,
+    restaurant: Restaurant
+  ): Promise<void> {
+    const cacheKey = `${date}-${location}`
+    await this.redisClient.set(cacheKey, JSON.stringify(restaurant))
   }
 
-  public async get(key: string): Promise<string | null> {
+  public async get(date: string, location: string): Promise<string | null> {
     try {
-      console.info(`Looking in cache for key ${key}`)
-      const result = await this.redisClient.get(key)
-      console.info(`Found ${result} for key ${key} in cache`)
+      const cacheKey = `${date}-${location}`
+      console.info(`Looking in cache for key ${cacheKey}`)
+      const result = await this.redisClient.get(cacheKey)
+      console.info(`Found ${result} for key ${cacheKey} in cache`)
       return result
     } catch (error) {
-      console.error(`Error getting key ${key} from cache: ${error}`)
+      console.error(
+        `Error getting date ${date} and location ${location} from cache: ${error}`
+      )
       return null
     }
   }

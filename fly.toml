@@ -4,7 +4,7 @@
 #
 
 app = "lunch-api"
-primary_region = "arn"
+primary_region = "ams"
 
 [http_service]
   internal_port = 8080

@@ -9,7 +9,11 @@ app.listen(port, () => {
 })
 
 function validateRequiredEnvironmentVariables() {
-  const requiredVariables = ['API_KEYS', 'GOOGLE_APPLICATION_CREDENTIALS']
+  const requiredVariables = [
+    'API_KEYS',
+    'GOOGLE_APPLICATION_CREDENTIALS',
+    'POSTGRES_CONNECTION_STRING',
+  ]
 
   for (const variable of requiredVariables) {
     if (!process.env[variable] || process.env[variable] === 'undefined') {
