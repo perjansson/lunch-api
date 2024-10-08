@@ -1,4 +1,4 @@
-import { Application, Request, Response } from 'express'
+import e, { Application, Request, Response } from 'express'
 import NodeGeocoder, { Entry } from 'node-geocoder'
 import geoTz from 'geo-tz'
 import { format } from 'date-fns'

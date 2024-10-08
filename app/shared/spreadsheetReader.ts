@@ -23,14 +23,13 @@ export async function getSpreadSheetValues(
     return (
       await sheets.spreadsheets.values.get({
         spreadsheetId: SPREADSHEET_ID,
-        auth,
         range: sheetName,
+        auth,
       })
     ).data
   } catch (error) {
     const errorMessage = `Error getting spreadsheet values at range ${sheetName}:`
     console.error(errorMessage, error instanceof Error ? error.message : error)
-
     throw Error(errorMessage)
   }
 }

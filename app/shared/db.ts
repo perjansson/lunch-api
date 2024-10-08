@@ -1,15 +1,18 @@
-import { Pool, QueryResult } from 'pg'
+import { Pool, Query, QueryResult } from 'pg'
 import { Restaurant } from '../restaurant/model'
 import { CacheService } from './cache'
 import { POSTGRES_CONNECTION_STRING } from './environment'
+import { featureFlags } from './featureFlag'
 
 export class DatabaseService {
   private static instance: DatabaseService
-  private pool: Pool
+  private pool: Pool | undefined
   private static cacheService: CacheService
 
   private constructor() {
-    this.pool = new Pool({ connectionString: POSTGRES_CONNECTION_STRING })
+    if (featureFlags.dbPersistence) {
+      this.pool = new Pool({ connectionString: POSTGRES_CONNECTION_STRING })
+    }
   }
 
   public static getInstance(): DatabaseService {
@@ -23,8 +26,17 @@ export class DatabaseService {
   private async executeQuery(
     query: string,
     params: any[] = []
-  ): Promise<QueryResult<any>> {
+  ): Promise<QueryResult<any> | null> {
     try {
+      if (!featureFlags.dbPersistence) {
+        console.info('Database persistence is disabled in feature flags')
+        return Promise.resolve(null)
+      }
+
+      if (!this.pool) {
+        throw new Error('Database connection pool is not initialized')
+      }
+
       const client = await this.pool.connect()
       const result = await client.query(query, params)
       client.release()
@@ -64,7 +76,7 @@ export class DatabaseService {
     const query =
       'SELECT value FROM recommendations WHERE date = $1 AND location = $2'
     const result = await this.executeQuery(query, [date, location])
-    const restaurant = result.rows.length
+    const restaurant = result?.rows.length
       ? JSON.parse(result.rows[0].restaurant)
       : null
     console.info(`Got restaurant for ${date} and ${location}:`, restaurant)

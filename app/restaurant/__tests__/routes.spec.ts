@@ -78,7 +78,9 @@ describe('Route /api/location/restaurants', () => {
   })
 
   test('should return 401 for missing api-key', async () => {
-    const response = await request(app).get('/api/invalid-location/restaurants')
+    const response = await request(app).get(
+      '/api/api-test-data-location/restaurants'
+    )
     expect(response.status).toBe(401)
   })
 })

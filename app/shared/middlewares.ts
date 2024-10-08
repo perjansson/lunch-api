@@ -27,6 +27,10 @@ export function validateAPI({
   exlucedOrigins,
 }: ValidateAPIOptions) {
   return (req: Request, res: Response, next: NextFunction) => {
+    console.log(`Request path: ${req.path}`)
+    console.log(`Request origin: ${req.headers.origin}`)
+    console.log(`Request API key: ${req.headers['api-key']}`)
+
     if ((exlucedPaths ?? []).includes(req.path)) {
       return next()
     }

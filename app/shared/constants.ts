@@ -23,4 +23,5 @@ export const ALLOWED_ORIGINS = [
   'https://lunch-reaktor-web.fly.dev',
   'http://localhost:3000', // dev server of lunch-web
   'http://localhost:3001', // more dev server of lunch-web
+  'http://localhost:8080', // api index.html
 ]
