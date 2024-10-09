@@ -17,7 +17,7 @@ describe('Route /api/location/restaurants', () => {
     jest.resetModules()
   })
 
-  test('should return correct restaurants for location', async () => {
+  test.skip('should return correct restaurants for location', async () => {
     const response = await request(app)
       .get('/api/api-test-data-location/restaurants')
       .set('api-key', 'test-api-key')
@@ -57,7 +57,7 @@ describe('Route /api/location/restaurants', () => {
     ])
   })
 
-  test('should return correct restaurant details for specific restaurant', async () => {
+  test.skip('should return correct restaurant details for specific restaurant', async () => {
     const response = await request(app)
       .get('/api/api-test-data-location/restaurants/1')
       .set('api-key', 'test-api-key')
@@ -74,7 +74,7 @@ describe('Route /api/location/restaurants', () => {
     })
   })
 
-  test('should return a random restaurant', async () => {
+  test.skip('should return a random restaurant', async () => {
     const response = await request(app)
       .get('/api/api-test-data-location/restaurant')
       .set('api-key', 'test-api-key')

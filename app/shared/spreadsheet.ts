@@ -3,7 +3,7 @@ import { SPREADSHEET_ID } from './constants'
 import { GOOGLE_APPLICATION_CREDENTIALS } from './environment'
 
 const sheets = google.sheets('v4')
-const SCOPES = ['https://www.googleapis.com/auth/spreadsheets.readonly']
+const SCOPES = ['https://www.googleapis.com/auth/spreadsheets']
 
 async function getAuthToken() {
   const auth = new google.auth.GoogleAuth({
@@ -29,6 +29,29 @@ export async function getSpreadSheetValues(
     ).data
   } catch (error) {
     const errorMessage = `Error getting spreadsheet values at range ${sheetName}:`
+    console.error(errorMessage, error instanceof Error ? error.message : error)
+    throw Error(errorMessage)
+  }
+}
+
+export async function updateSpreadSheetValues(
+  sheetName: string,
+  values: string[][]
+): Promise<void> {
+  try {
+    const auth = await getAuthToken()
+
+    await sheets.spreadsheets.values.update({
+      spreadsheetId: SPREADSHEET_ID,
+      range: sheetName,
+      valueInputOption: 'RAW',
+      requestBody: {
+        values,
+      },
+      auth,
+    })
+  } catch (error) {
+    const errorMessage = `Error updating spreadsheet values at range ${sheetName}:`
     console.error(errorMessage, error instanceof Error ? error.message : error)
     throw Error(errorMessage)
   }

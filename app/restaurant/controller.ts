@@ -1,7 +1,14 @@
+import { DatabaseService } from '../shared/db'
 import { Location } from '../shared/model'
-import { getSpreadSheetValues } from '../shared/spreadsheetReader'
-import { Restaurant } from './model'
-import { parseRestaurants, validateRestaurants } from './validator'
+import { getSpreadSheetValues } from '../shared/spreadsheet'
+import { Recommendation, Restaurant } from './model'
+import {
+  parseRecommendation,
+  parseRestaurants,
+  validateRestaurants,
+} from './validator'
+
+const db = DatabaseService.getInstance()
 
 export async function getRestaurants(
   location: Location
@@ -46,4 +53,25 @@ export async function getRandomRestaurant(
   return includedRestaurants[
     Math.floor(Math.random() * includedRestaurants.length)
   ]
+}
+
+export async function getRecommendation(
+  location: Location,
+  date: string
+): Promise<Recommendation | undefined> {
+  const recommendationRaw = await db.getRecommendation(location, date)
+  if (!recommendationRaw) {
+    return undefined
+  }
+
+  return parseRecommendation(recommendationRaw[0], recommendationRaw[1])
+}
+
+export async function saveRecommendation(
+  location: Location,
+  date: string,
+  restaurant: Restaurant,
+  quote: string
+): Promise<void> {
+  await db.saveRecommendation(location, date, restaurant, quote)
 }

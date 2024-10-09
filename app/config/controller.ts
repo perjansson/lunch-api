@@ -1,6 +1,6 @@
 import { DEFAULT_DAYS_BETWEEN_RESTAURANT_CAN_APPEAR_IN_RANDOMISATION } from '../shared/constants'
 import { Location } from '../shared/model'
-import { getSpreadSheetValues } from '../shared/spreadsheetReader'
+import { getSpreadSheetValues } from '../shared/spreadsheet'
 import { Config } from './model'
 import { validateConfig, parseConfig } from './validator'
 

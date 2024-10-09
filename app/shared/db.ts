@@ -1,19 +1,14 @@
-import { Pool, Query, QueryResult } from 'pg'
-import { Restaurant } from '../restaurant/model'
+import { Recommendation, Restaurant } from '../restaurant/model'
 import { CacheService } from './cache'
-import { POSTGRES_CONNECTION_STRING } from './environment'
+import {
+  getSpreadSheetValues,
+  updateSpreadSheetValues,
+} from '../shared/spreadsheet'
 import { featureFlags } from './featureFlag'
 
 export class DatabaseService {
   private static instance: DatabaseService
-  private pool: Pool | undefined
   private static cacheService: CacheService
-
-  private constructor() {
-    if (featureFlags.dbPersistence) {
-      this.pool = new Pool({ connectionString: POSTGRES_CONNECTION_STRING })
-    }
-  }
 
   public static getInstance(): DatabaseService {
     if (!DatabaseService.instance) {
@@ -23,47 +18,10 @@ export class DatabaseService {
     return DatabaseService.instance
   }
 
-  private async executeQuery(
-    query: string,
-    params: any[] = []
-  ): Promise<QueryResult<any> | null> {
-    try {
-      if (!featureFlags.dbPersistence) {
-        console.info('Database persistence is disabled in feature flags')
-        return Promise.resolve(null)
-      }
-
-      if (!this.pool) {
-        throw new Error('Database connection pool is not initialized')
-      }
-
-      const client = await this.pool.connect()
-      const result = await client.query(query, params)
-      client.release()
-      return result
-    } catch (error) {
-      console.error('Error executing query:', error)
-      throw error
-    }
-  }
-
-  public async saveRecommendation(
-    date: string,
-    location: string,
-    restaurant: Restaurant
-  ): Promise<void> {
-    const query =
-      'INSERT INTO recommendations (date, location, restaurantId, restaurantName) VALUES ($1, $2, $3)'
-    await this.executeQuery(query, [date, location, JSON.stringify(restaurant)])
-    console.info(`Saved recommendation for ${date} and ${location}`, restaurant)
-
-    DatabaseService.cacheService?.set(date, location, restaurant)
-  }
-
   public async getRecommendation(
-    date: string,
-    location: string
-  ): Promise<Restaurant | null> {
+    location: string,
+    date: string
+  ): Promise<string[] | null> {
     const cachedRestaurant = await DatabaseService.cacheService?.get(
       date,
       location
@@ -73,14 +31,50 @@ export class DatabaseService {
       return JSON.parse(cachedRestaurant)
     }
 
-    const query =
-      'SELECT value FROM recommendations WHERE date = $1 AND location = $2'
-    const result = await this.executeQuery(query, [date, location])
-    const restaurant = result?.rows.length
-      ? JSON.parse(result.rows[0].restaurant)
-      : null
-    console.info(`Got restaurant for ${date} and ${location}:`, restaurant)
+    try {
+      const values = await getSpreadSheetValues(`${location}!M:O`)
+      const existingRecommendation = values?.values?.find(
+        (row) => row[0] === date
+      )
+      return existingRecommendation
+        ? [existingRecommendation[1], existingRecommendation[2]]
+        : null
+    } catch (error) {
+      const errorMessage = `Error getting historical recommendations by date ${date} in sheet ${location}:`
 
-    return restaurant
+      console.error(
+        errorMessage,
+        error instanceof Error ? error.message : error
+      )
+
+      throw Error(errorMessage)
+    }
+  }
+
+  public async saveRecommendation(
+    location: string,
+    date: string,
+    restaurant: Restaurant,
+    quote: string
+  ): Promise<void> {
+    try {
+      const values = await getSpreadSheetValues(`${location}!M:O`)
+      const nextRow = values?.values ? values.values.length + 1 : 1
+      const newRow = [date, restaurant.name, quote]
+      await updateSpreadSheetValues(`${location}!M${nextRow}:O${nextRow}`, [
+        newRow,
+      ])
+
+      DatabaseService.cacheService?.set(date, location, restaurant)
+    } catch (error) {
+      const errorMessage = `Error saving recommendation for date ${date} in sheet ${location}:`
+
+      console.error(
+        errorMessage,
+        error instanceof Error ? error.message : error
+      )
+
+      throw Error(errorMessage)
+    }
   }
 }

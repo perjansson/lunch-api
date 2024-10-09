@@ -13,78 +13,66 @@ const db = DatabaseService.getInstance()
 
 export function initSlackRoutes(app: Application) {
   app.post('/api/slack', async (req: Request, res: Response) => {
-    try {
-      console.info(`Slack request`, JSON.stringify(req.body))
-
-      const { team_domain } = req.body
-      if (team_domain !== 'reaktor') {
-        return res.status(401).send()
-      }
-
-      const location = req.body.text.trim()
-      const parsedLocation = LocationSchema.safeParse(location)
-      console.info(`Parsed location for ${location}:`, parsedLocation)
-      if (!parsedLocation.success) {
-        return res.send(
-          `Please provide a valid location, i.e. '/lunch ${OFFICES.join(
-            ' | '
-          )}'`
-        )
-      }
-
-      const coordinates = await getLocationCoordinates(location)
-      console.info(`Coordinates for ${location}:`, coordinates)
-      if (!coordinates) {
-        return res.send(
-          `Sorry, I couldn't find any coordinates for the location ${location} :sad-toast:`
-        )
-      }
-
-      const isoDate = getCurrentISODate(coordinates)
-      console.info(`ISO date for ${location}:`, isoDate)
-      if (!isoDate) {
-        return res.send(
-          `Sorry, I couldn't find any current date for the location ${location} and coordinates ${JSON.stringify(
-            coordinates
-          )} :sad-toast:`
-        )
-      }
-
-      let restaurant = await db.getRecommendation(isoDate, location)
-
-      if (!restaurant) {
-        restaurant = await getRandomRestaurant(location)
-        console.info(`Random restaurant for ${location}:`, restaurant)
-
-        if (restaurant) {
-          db.saveRecommendation(isoDate, location, restaurant)
-        }
-      }
-
-      const message = restaurant
-        ? buildMessage(restaurant)
-        : "Sorry, I couldn't find any restaurants for today. :sad-toast:"
-      console.info(`Message for ${location}:`, message)
-
-      const slackResponse = {
-        response_type: 'in_channel',
-        text: message,
-      }
-
-      res.send(JSON.stringify(slackResponse))
-    } catch (error) {
-      const errorMessage =
-        error instanceof Error
-          ? error.message
-          : 'Unknown error getting restaurant for Slack request'
-
-      const slackResponse = {
-        response_type: 'in_channel',
-        text: `Oh snap: ${errorMessage}`,
-      }
-
-      res.send(JSON.stringify(slackResponse))
-    }
+    //   try {
+    //     console.info(`Slack request`, JSON.stringify(req.body))
+    //     const { team_domain } = req.body
+    //     if (team_domain !== 'reaktor') {
+    //       return res.status(401).send()
+    //     }
+    //     const location = req.body.text.trim()
+    //     const parsedLocation = LocationSchema.safeParse(location)
+    //     console.info(`Parsed location for ${location}:`, parsedLocation)
+    //     if (!parsedLocation.success) {
+    //       return res.send(
+    //         `Please provide a valid location, i.e. '/lunch ${OFFICES.join(
+    //           ' | '
+    //         )}'`
+    //       )
+    //     }
+    //     const coordinates = await getLocationCoordinates(location)
+    //     console.info(`Coordinates for ${location}:`, coordinates)
+    //     if (!coordinates) {
+    //       return res.send(
+    //         `Sorry, I couldn't find any coordinates for the location ${location} :sad-toast:`
+    //       )
+    //     }
+    //     const isoDate = getCurrentISODate(coordinates)
+    //     console.info(`ISO date for ${location}:`, isoDate)
+    //     if (!isoDate) {
+    //       return res.send(
+    //         `Sorry, I couldn't find any current date for the location ${location} and coordinates ${JSON.stringify(
+    //           coordinates
+    //         )} :sad-toast:`
+    //       )
+    //     }
+    //     let restaurant = await db.getRecommendation(isoDate, location)
+    //     if (!restaurant) {
+    //       restaurant = await getRandomRestaurant(location)
+    //       console.info(`Random restaurant for ${location}:`, restaurant)
+    //       if (restaurant) {
+    //         db.saveRecommendation(isoDate, location, restaurant)
+    //       }
+    //     }
+    //     const message = restaurant
+    //       ? buildMessage(restaurant)
+    //       : "Sorry, I couldn't find any restaurants for today. :sad-toast:"
+    //     console.info(`Message for ${location}:`, message)
+    //     const slackResponse = {
+    //       response_type: 'in_channel',
+    //       text: message,
+    //     }
+    //     res.send(JSON.stringify(slackResponse))
+    //   } catch (error) {
+    //     const errorMessage =
+    //       error instanceof Error
+    //         ? error.message
+    //         : 'Unknown error getting restaurant for Slack request'
+    //     const slackResponse = {
+    //       response_type: 'in_channel',
+    //       text: `Oh snap: ${errorMessage}`,
+    //     }
+    //     res.send(JSON.stringify(slackResponse))
+    //   }
   })
 }
 

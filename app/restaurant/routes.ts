@@ -3,15 +3,16 @@ import { ParamsDictionary } from 'express-serve-static-core'
 import { z } from 'zod'
 import {
   getRandomRestaurant,
+  getRecommendation,
   getRestaurant,
   getRestaurants,
+  saveRecommendation,
 } from './controller'
 import { Location, LocationSchema } from '../shared/model'
 import { assertParams } from '../shared/middlewares'
-import { DatabaseService } from '../shared/db'
 import { getQuoteForRestaurant } from '../shared/openai'
 
-const db = DatabaseService.getInstance()
+// const db = DatabaseService.getInstance()
 
 interface RestaurantsParams extends ParamsDictionary {
   location: Location
@@ -90,31 +91,42 @@ export function initRestaurantRoutes(app: Application) {
         const { isoDate } = req.query
 
         if (isoDate) {
-          const restaurant = await db.getRecommendation(
-            isoDate as string,
-            location
-          )
+          try {
+            const recommendation = await getRecommendation(
+              location,
+              isoDate as string
+            )
 
-          if (restaurant) {
-            return res.send(restaurant)
+            if (recommendation) {
+              return res.send(recommendation)
+            }
+          } catch (error) {
+            // Just ignore the error if there's an issue getting the recommendation
           }
         }
 
         const randomRestaurant = await getRandomRestaurant(location)
         if (!randomRestaurant) {
           return res.status(404).send()
-        } else if (isoDate) {
-          await db.saveRecommendation(
-            isoDate as string,
-            location,
-            randomRestaurant
-          )
         }
 
         const quote = await getQuoteForRestaurant(
           randomRestaurant,
           LocationSchema.parse(location)
         )
+
+        if (isoDate) {
+          try {
+            await saveRecommendation(
+              location,
+              isoDate as string,
+              randomRestaurant,
+              quote
+            )
+          } catch (error) {
+            // Just ignore the error if there's an issue saving the recommendation
+          }
+        }
 
         const randomRestaurantWithOrWithoutQuote = {
           ...randomRestaurant,

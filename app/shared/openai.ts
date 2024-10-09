@@ -11,7 +11,7 @@ const openai = new OpenAI({
 export async function getQuoteForRestaurant(
   restaurant: Restaurant,
   location: Location
-): Promise<String> {
+): Promise<string> {
   if (!featureFlags.openAiLunchQuote) {
     return 'Oops! Feature disabled. AI is out to lunch!'
   }

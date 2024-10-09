@@ -12,7 +12,8 @@ function validateRequiredEnvironmentVariables() {
   const requiredVariables = [
     'API_KEYS',
     'GOOGLE_APPLICATION_CREDENTIALS',
-    'POSTGRES_CONNECTION_STRING',
+    'REDIS_CONNECTING_STRING',
+    'OPENAI_API_KEY',
   ]
 
   for (const variable of requiredVariables) {

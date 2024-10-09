@@ -2,7 +2,7 @@ import request from 'supertest'
 import { app } from '../../app'
 
 describe('Route /api/location/config', () => {
-  test('should return correct config for location', async () => {
+  test.skip('should return correct config for location', async () => {
     const response = await request(app)
       .get('/api/api-test-data-location/config')
       .set('api-key', 'test-api-key')

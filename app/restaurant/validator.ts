@@ -1,5 +1,6 @@
 import { sheets_v4 } from 'googleapis'
 import {
+  RecommendationSchema,
   Restaurant,
   RestaurantSchema,
   SpreadsheetRestaurantsSchema,
@@ -50,4 +51,20 @@ export function parseRestaurants(restaurantsRaw: (string | boolean)[][]) {
     .filter((parsedRow): parsedRow is Restaurant => parsedRow !== undefined)
 
   return restaurants
+}
+
+export function parseRecommendation(name: string, quote: string | undefined) {
+  const recommendation = RecommendationSchema.safeParse({
+    name,
+    quote,
+  })
+
+  if (recommendation.success) {
+    return recommendation.data
+  } else {
+    console.info(
+      `Could not parse recommendation, will ignore it. Error: ${recommendation.error}`
+    )
+    return undefined
+  }
 }

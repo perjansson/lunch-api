@@ -1,4 +1,4 @@
-import { z } from 'zod'
+import { date, z } from 'zod'
 
 export const RestaurantSchema = z.object({
   id: z.string().min(1),
@@ -20,3 +20,10 @@ export const SpreadsheetRestaurantSchema = z.array(
 export const SpreadsheetRestaurantsSchema = z.object({
   values: z.array(SpreadsheetRestaurantSchema),
 })
+
+export const RecommendationSchema = z.object({
+  name: z.string().min(1),
+  quote: z.string().optional(),
+})
+
+export type Recommendation = z.infer<typeof RecommendationSchema>
