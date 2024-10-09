@@ -12,6 +12,7 @@ export const OFFICES = [
   'stockholm',
   'lisbon',
   'seinajoki',
+  'rovaniemi',
 ] as const
 
 export const LOCATIONS = [
