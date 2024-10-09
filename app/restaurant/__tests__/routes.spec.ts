@@ -1,7 +1,22 @@
 import request from 'supertest'
 import { app } from '../../app'
 
+import * as featureFlags from '../../shared/featureFlag'
+
+// Mock the feature flag
+jest.mock('../../shared/featureFlag', () => ({
+  ...jest.requireActual('../../shared/featureFlag'),
+  featureFlags: {
+    ...jest.requireActual('../../shared/featureFlag').featureFlags,
+    openAiLunchQuote: false,
+  },
+}))
+
 describe('Route /api/location/restaurants', () => {
+  beforeAll(() => {
+    jest.resetModules()
+  })
+
   test('should return correct restaurants for location', async () => {
     const response = await request(app)
       .get('/api/api-test-data-location/restaurants')
@@ -68,6 +83,9 @@ describe('Route /api/location/restaurants', () => {
     const parsedResponse = JSON.parse(response.text)
     expect(parsedResponse).toHaveProperty('id')
     expect(parsedResponse).toHaveProperty('name')
+    expect(parsedResponse.quote).toBe(
+      'Oops! Feature disabled. AI is out to lunch!'
+    )
   })
 
   test('should return 400 for invalid location', async () => {

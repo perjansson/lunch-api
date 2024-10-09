@@ -9,6 +9,7 @@ import {
 import { Location, LocationSchema } from '../shared/model'
 import { assertParams } from '../shared/middlewares'
 import { DatabaseService } from '../shared/db'
+import { getQuoteForRestaurant } from '../shared/openai'
 
 const db = DatabaseService.getInstance()
 
@@ -110,7 +111,17 @@ export function initRestaurantRoutes(app: Application) {
           )
         }
 
-        res.send(JSON.stringify(randomRestaurant))
+        const quote = await getQuoteForRestaurant(
+          randomRestaurant,
+          LocationSchema.parse(location)
+        )
+
+        const randomRestaurantWithOrWithoutQuote = {
+          ...randomRestaurant,
+          quote,
+        }
+
+        res.send(JSON.stringify(randomRestaurantWithOrWithoutQuote))
       } catch (error) {
         res
           .status(500)

@@ -25,6 +25,7 @@ jobs:
         run: npm test
         env:
           GOOGLE_APPLICATION_CREDENTIALS: '${{ secrets.GOOGLE_APPLICATION_CREDENTIALS }}'
+          OPENAI_API_KEY: '${{ secrets.OPENAI_API_KEY }}'
 
       - name: Build
         run: npm run build

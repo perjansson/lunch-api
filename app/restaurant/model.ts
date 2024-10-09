@@ -8,6 +8,7 @@ export const RestaurantSchema = z.object({
   distance: z.string().optional(),
   time: z.string().optional(),
   directions: z.string().optional(),
+  quote: z.string().optional(),
 })
 
 export type Restaurant = z.infer<typeof RestaurantSchema>
